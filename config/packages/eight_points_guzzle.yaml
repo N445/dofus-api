@@ -1,0 +1,14 @@
+# EightPoints GuzzleBundle
+# A full list of configuration options can be found here:
+# https://github.com/8p/EightPointsGuzzleBundle/blob/master/src/Resources/doc/configuration-reference.md
+eight_points_guzzle:
+    clients:
+        dofus:
+            class: 'App\Client\DofusClient'
+            base_url: "https://www.dofus.com"
+            options:
+                timeout: 30
+                http_errors: true
+                headers:
+                    User-Agent: "EightPointsGuzzleBundle/v7"
+            plugin: null

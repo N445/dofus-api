@@ -23,5 +23,7 @@ services:
         resource: '../src/Controller'
         tags: ['controller.service_arguments']
 
+    App\Client\DofusClient: '@eight_points_guzzle.client.dofus'
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
