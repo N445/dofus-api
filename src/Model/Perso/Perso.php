@@ -2,7 +2,7 @@
 
 namespace App\Model\Perso;
 
-use App\Model\Guilde\Guilde;
+use App\Model\Perso\Guilde;
 
 class Perso
 {
@@ -24,7 +24,7 @@ class Perso
     /**
      * @var boolean
      */
-    private $isOmega;
+    private $isOmega = false;
 
     /**
      * @var string
@@ -32,7 +32,7 @@ class Perso
     private $classe;
 
     /**
-     * @var string
+     * @var string|null
      */
     private $grade;
 
@@ -52,7 +52,7 @@ class Perso
     private $metiers;
 
     /**
-     * @var Guilde
+     * @var Guilde|null
      */
     private $guilde;
 
@@ -156,18 +156,18 @@ class Perso
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getGrade(): string
+    public function getGrade(): ?string
     {
         return $this->grade;
     }
 
     /**
-     * @param string $grade
+     * @param string|null $grade
      * @return Perso
      */
-    public function setGrade(string $grade): Perso
+    public function setGrade(?string $grade): Perso
     {
         $this->grade = $grade;
         return $this;
@@ -238,20 +238,21 @@ class Perso
     }
 
     /**
-     * @return Guilde
+     * @return Guilde|null
      */
-    public function getGuilde(): Guilde
+    public function getGuilde(): ?Guilde
     {
         return $this->guilde;
     }
 
     /**
-     * @param Guilde $guilde
+     * @param Guilde|null $guilde
      * @return Perso
      */
-    public function setGuilde(Guilde $guilde): Perso
+    public function setGuilde(?Guilde $guilde): Perso
     {
         $this->guilde = $guilde;
         return $this;
     }
+
 }

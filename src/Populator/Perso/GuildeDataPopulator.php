@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Service\Perso;
+namespace App\Populator\Perso;
 
-use App\Model\Guilde\Guilde;
+use App\Model\Perso\Guilde;
 use App\Model\Perso\Perso;
 use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\DomCrawler\Link;
@@ -33,8 +33,7 @@ class GuildeDataPopulator
             return;
         }
 
-        $this->perso->setGuilde((new Guilde())
-            ->setId($this->getId($result))
+        $this->perso->setGuilde((new Guilde($this->getId($result)))
             ->setName($this->getName($result))
             ->setLevel($this->getLevel($result))
             ->setNbMembre($this->getNbMembre($result))

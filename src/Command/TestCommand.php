@@ -3,7 +3,8 @@
 namespace App\Command;
 
 use App\Client\DofusClient;
-use App\Service\Perso\PersoDataProvider;
+use App\Provider\Guilde\GuildeDataProvider;
+use App\Provider\Perso\PersoDataProvider;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -21,14 +22,21 @@ class TestCommand extends Command
     private $persoDataProvider;
 
     /**
-     * TestCommand constructor.
-     * @param string|null       $name
-     * @param PersoDataProvider $persoDataProvider
+     * @var GuildeDataProvider
      */
-    public function __construct(string $name = null, PersoDataProvider $persoDataProvider)
+    private $guildeDataProvider;
+
+    /**
+     * TestCommand constructor.
+     * @param string|null        $name
+     * @param PersoDataProvider  $persoDataProvider
+     * @param GuildeDataProvider $guildeDataProvider
+     */
+    public function __construct(string $name = null, PersoDataProvider $persoDataProvider, GuildeDataProvider $guildeDataProvider)
     {
         parent::__construct($name);
-        $this->persoDataProvider = $persoDataProvider;
+        $this->persoDataProvider  = $persoDataProvider;
+        $this->guildeDataProvider = $guildeDataProvider;
     }
 
     protected function configure()
@@ -40,10 +48,11 @@ class TestCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
 
-//        $this->persoDataProvider->getObjectPerso('841461500206-ana-naas');
-        $this->persoDataProvider->getObjectPerso('164348700212-naas');
-//        $this->persoDataProvider->getObjectPerso('903526500205-ds-louis-defunes');
-
+        $perso = $this->persoDataProvider->getObjectPerso('841461500206-ana-naas');
+//        $perso = $this->persoDataProvider->getObjectPerso('164348700212-naas');
+//        $perso  = $this->persoDataProvider->getObjectPerso('903526500205-ds-louis-defunes');
+        $guilde = $this->guildeDataProvider->getObjectGuilde('620800206-unreal');
+        dump($perso, $guilde);
         $io->success('Test ok !');
 
         return 0;

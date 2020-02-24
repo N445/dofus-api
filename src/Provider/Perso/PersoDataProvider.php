@@ -1,9 +1,12 @@
 <?php
 
-namespace App\Service\Perso;
+namespace App\Provider\Perso;
 
 use App\Client\DofusClient;
 use App\Model\Perso\Perso;
+use App\Populator\Perso\GuildeDataPopulator;
+use App\Populator\Perso\MetierDataPopulator;
+use App\Populator\Perso\PrimaryDataPopulator;
 use GuzzleHttp\Psr7\Uri;
 use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
@@ -79,7 +82,7 @@ class PersoDataProvider
         $this->guildeDataPopulator->populate($perso, $persoHtml);
 
         dump($perso);
-        die;
+        return $perso;
     }
 
     /**
@@ -89,21 +92,7 @@ class PersoDataProvider
      */
     private function getPersoHtml()
     {
-        return $this->cache->get($this->id, function (ItemInterface $item) {
-            $item->expiresAfter(3600);
-
-            $response = $this->dofusClient->get(sprintf(self::PERSO_URL, $this->id));
-
-            if (200 !== $response->getStatusCode()) {
-                throw new \Exception(sprintf('%s : %s', $response->getStatusCode(), $response->getReasonPhrase()));
-            }
-            return $response->getBody()->getContents();
-        });
-    }
-
-    private function getGuildHtml()
-    {
-        return $this->cache->get($this->id, function (ItemInterface $item) {
+        return $this->cache->get(sprintf('perso_%s', $this->id), function (ItemInterface $item) {
             $item->expiresAfter(3600);
 
             $response = $this->dofusClient->get(sprintf(self::PERSO_URL, $this->id));

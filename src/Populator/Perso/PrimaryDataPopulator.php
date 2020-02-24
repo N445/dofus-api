@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Service\Perso;
+namespace App\Populator\Perso;
 
 use App\Model\Perso\Perso;
 use Symfony\Component\DomCrawler\Crawler;
