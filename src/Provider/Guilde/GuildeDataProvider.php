@@ -16,12 +16,18 @@ use Symfony\Contracts\Cache\ItemInterface;
 class GuildeDataProvider
 {
     const GUILDE_URL  = '/fr/mmorpg/communaute/annuaires/pages-guildes/%s';
-    const MEMBERS_URL = self::GUILDE_URL . '/membres?page=%d';
+    const MEMBERS_URL = self::GUILDE_URL . '/membres';
+    const NB_PAGE_MAX = 2;
 
     /**
      * @var string
      */
     private $id;
+
+    /**
+     * @var integer
+     */
+    private $nbPageMax;
 
     /**
      * @var DofusClient
@@ -61,21 +67,25 @@ class GuildeDataProvider
         $this->membersDataPopulator = $membersDataPopulator;
     }
 
-    public function getObjectGuilde(string $id)
+    public function getObjectGuilde(string $id, $nbPageMax = self::NB_PAGE_MAX)
     {
         /** @var Uri $uriConf */
         $uriConf = $this->dofusClient->getConfig('base_uri');
 
-        $this->id   = $id;
-        $guildeHtml = new Crawler($this->getGuildHtml(), sprintf('%s://%s', $uriConf->getScheme(), $uriConf->getHost()));
-        $guilde     = new Guilde($id);
+        $this->id        = $id;
+        $this->nbPageMax = $nbPageMax;
+        $guildeHtml      = new Crawler($this->getGuildHtml(), sprintf('%s://%s', $uriConf->getScheme(), $uriConf->getHost()));
+        $guilde          = new Guilde($id);
 
         $this->primaryDataPopulator->populate($guilde, $guildeHtml);
 
-        array_map(function (int $page) use ($guilde, $uriConf) {
+        for ($page = 1; $page < PageCalculator::getNbPage($guilde); $page++) {
+            if ($this->nbPageMax <= $page) {
+                break;
+            }
             $membersHtml = new Crawler($this->getMembersHtml($page), sprintf('%s://%s', $uriConf->getScheme(), $uriConf->getHost()));
             $this->membersDataPopulator->populate($guilde, $membersHtml);
-        }, range(1, PageCalculator::getNbPage($guilde)));
+        }
 
         return $guilde;
     }
@@ -107,7 +117,9 @@ class GuildeDataProvider
     {
         return $this->cache->get(sprintf('members_%s_page_%s', $this->id, $page), function (ItemInterface $item) use ($page) {
             $item->expiresAfter(3600);
-            $response = $this->dofusClient->get(sprintf(self::MEMBERS_URL, $this->id, $page));
+            $response = $this->dofusClient->get(sprintf(self::MEMBERS_URL, $this->id), [
+                'page' => $page,
+            ]);
             if (200 !== $response->getStatusCode()) {
                 throw new \Exception(sprintf('%s : %s', $response->getStatusCode(), $response->getReasonPhrase()));
             }

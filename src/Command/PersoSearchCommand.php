@@ -77,7 +77,7 @@ class PersoSearchCommand extends Command
     public function __construct(string $name = null, PersoSearcher $persoSearcher, PersoDataProvider $persoDataProvider)
     {
         parent::__construct($name);
-        $this->persoSearcher = $persoSearcher;
+        $this->persoSearcher     = $persoSearcher;
         $this->persoDataProvider = $persoDataProvider;
     }
 
@@ -94,24 +94,28 @@ class PersoSearchCommand extends Command
         $this->io     = new SymfonyStyle($input, $output);
         $this->helper = $this->getHelper('question');
 
-        $this->setClasse();
-        $this->setServer();
-        $this->setPersoName();
-//        $this->classeId  = 8;
-//        $this->serverId  = 212;
-//        $this->persoName = 'Naas';
-        $this->search    = (new Search())
-            ->setClasse($this->classeId)
-            ->setServer($this->serverId)
+//        $this->setClasse();
+//        $this->setServer();
+//        $this->setPersoName();
+        $this->classeId  = [9, 10];
+        $this->serverId  = [36, 212];
+        $this->persoName = 'Heristof';
+        $this->search = (new Search())
+//            ->setClasse($this->classeId)
+//            ->setServer($this->serverId)
             ->setName($this->persoName)
+//            ->setLevelMin(null)
+//            ->setLevelMax(null)
+//            ->setSexe(1)
+//            ->setHasGuilde(false)
         ;
 
         $this->setPerso();
 
-        $this->persoDataProvider->getObjectPerso($this->perso);
-
-        $this->io->success('You have a new command! Now make it your own! Pass --help to see your options.');
-
+        if($this->perso){
+            $this->persoDataProvider->getObjectPerso($this->perso);
+            $this->io->success('Recherche de perso ok');
+        }
         return 0;
     }
 
@@ -150,9 +154,15 @@ class PersoSearchCommand extends Command
 
     private function setPerso()
     {
+        $persos = $this->persoSearcher->search($this->search);
+
+        if (!count($persos)) {
+            $this->io->error('Pas de perso trouvé');
+            return;
+        }
         $questionClasses = new ChoiceQuestion(
             'Selectionner un perso',
-            $this->persoSearcher->search($this->search),
+            $persos,
             0
         );
 

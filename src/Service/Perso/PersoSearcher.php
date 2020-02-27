@@ -4,6 +4,7 @@ namespace App\Service\Perso;
 
 use App\Client\DofusClient;
 use App\Model\Perso\Search;
+use App\Utils\Perso\SearchQueryBuilder;
 use GuzzleHttp\Psr7\Uri;
 use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
@@ -12,7 +13,7 @@ use Symfony\Contracts\Cache\ItemInterface;
 
 class PersoSearcher
 {
-    const SEARCH_URL = '/fr/mmorpg/communaute/annuaires/pages-persos?text=%s&character_breed_id[]=%d&character_homeserv[]=%d';
+    const SEARCH_URL = '/fr/mmorpg/communaute/annuaires/pages-persos';
 
     /**
      * @var DofusClient
@@ -35,20 +36,34 @@ class PersoSearcher
     private $results = [];
 
     /**
+     * @var SearchQueryBuilder
+     */
+    private $searchQueryBuilder;
+
+    /**
+     * @var array
+     */
+    private $query;
+
+    /**
      * PersoDataProvider constructor.
-     * @param DofusClient $dofusClient
+     * @param DofusClient        $dofusClient
+     * @param SearchQueryBuilder $searchQueryBuilder
      */
     public function __construct(
-        DofusClient $dofusClient
+        DofusClient $dofusClient,
+        SearchQueryBuilder $searchQueryBuilder
     )
     {
-        $this->dofusClient = $dofusClient;
-        $this->cache       = new FilesystemAdapter();
+        $this->dofusClient        = $dofusClient;
+        $this->cache              = new FilesystemAdapter();
+        $this->searchQueryBuilder = $searchQueryBuilder;
     }
 
     public function search(Search $search)
     {
         $this->search = $search;
+        $this->query  = $this->searchQueryBuilder->getQuery($this->search);
         return $this->getResults();
     }
 
@@ -59,8 +74,19 @@ class PersoSearcher
         $crawler = new Crawler($this->getSearchHtml(), sprintf('%s://%s', $uriConf->getScheme(), $uriConf->getHost()));
         $result  = $crawler->filter('html body.fr.ak-background-type-internal div.container.ak-main-container div.ak-main-content div.ak-main-page div.ak-container.ak-main-center div.ak-container.ak-panel.ak-nocontentpadding div.ak-panel-content table.ak-table tbody tr');
         $result->each(function (Crawler $node, $i) {
-            $node                                             = $node->filter('td')->eq(1)->filter('a');
-            $this->results[basename($node->link()->getUri())] = $node->text();
+//            $this->setResult($node);
+            $data   = [];
+            $link   = $node->filter('td')->eq(1)->filter('a');
+            $id     = basename($link->link()->getUri());
+            $data[] = $link->text();
+            $data[] = $node->filter('td')->eq(2)->filter('a')->text();
+            $data[]             = $node->filter('td')->eq(3)->filter('span')->count() ?
+                $node->filter('td')->eq(3)->filter('span')->text()
+                :$node->filter('td')->eq(3)->text();
+            $data[]             = $node->filter('td')->eq(4)->text();
+            $data[]             = $node->filter('td')->eq(5)->text();
+            $data[]             = $node->filter('td')->eq(6)->filter('a')->text();
+            $this->results[$id] = implode(' ', array_filter($data));
         });
         return $this->results;
     }
@@ -73,15 +99,33 @@ class PersoSearcher
      */
     private function getSearchHtml()
     {
-        return $this->cache->get(sprintf('2search_%s_%d_%d', $this->search->getClasse(), $this->search->getServer(), $this->search->getName()), function (ItemInterface $item) {
+        return $this->cache->get(sprintf('3search_%s', substr(str_shuffle(sha1(md5(serialize($this->search)))), 0, 20)), function (ItemInterface $item) {
             $item->expiresAfter(3600);
 
-            $response = $this->dofusClient->get(sprintf(self::SEARCH_URL, $this->search->getName(), $this->search->getClasse(), $this->search->getServer()));
+            $response = $this->dofusClient->get(self::SEARCH_URL, [
+                'query' => $this->query,
+            ]);
+//            $response = $this->dofusClient->get(sprintf(self::SEARCH_URL, $this->search->getName(), $this->search->getClasse(), $this->search->getServer()));
 
             if (200 !== $response->getStatusCode()) {
                 throw new \Exception(sprintf('%s : %s', $response->getStatusCode(), $response->getReasonPhrase()));
             }
             return $response->getBody()->getContents();
         });
+    }
+
+    private function setResult(Crawler $node)
+    {
+        $data   = [];
+        $link   = $node->filter('td')->eq(1)->filter('a');
+        $id     = basename($link->link()->getUri());
+        $data[] = $link->text();
+        $data[] = $node->filter('td')->eq(2)->filter('a')->text();
+        $data[] = $node->filter('td')->eq(3)->filter('span')->text();
+        $data[] = $node->filter('td')->eq(4)->text();
+        $data[] = $node->filter('td')->eq(5)->text();
+        $data[] = $node->filter('td')->eq(6)->filter('a')->text();
+//        dd(array_filter($data));
+        $this->results[$id] = implode(' ', array_filter($data));
     }
 }

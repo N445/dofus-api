@@ -48,11 +48,12 @@ class TestCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
 
-        $perso = $this->persoDataProvider->getObjectPerso('841461500206-ana-naas');
+//        $perso = $this->persoDataProvider->getObjectPerso('841461500206-ana-naas');
 //        $perso = $this->persoDataProvider->getObjectPerso('164348700212-naas');
 //        $perso  = $this->persoDataProvider->getObjectPerso('903526500205-ds-louis-defunes');
-        $guilde = $this->guildeDataProvider->getObjectGuilde('620800206-unreal');
-        dump($perso, $guilde);
+//        $guilde = $this->guildeDataProvider->getObjectGuilde('620800206-unreal');
+        $guilde = $this->guildeDataProvider->getObjectGuilde('6690900036-royaume-serrah');
+        dump($guilde);
         $io->success('Test ok !');
 
         return 0;
